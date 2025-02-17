@@ -93,8 +93,8 @@ jobs:
           name: "Release ${{ github.run_id }}"
           tag_name: "release-${{ github.run_id }}"
           files: |
-            ./allinone_linux_amd64
-            ./allinone_linux_arm64
-            ./allinone_darwin_amd64
-            ./allinone_darwin_arm64
-            ./allinone_windows_amd64.exe
+            /home/runner/work/iptv-allinone/iptv-allinone/artifacts/allinone_linux_amd64
+            /home/runner/work/iptv-allinone/iptv-allinone/artifacts/allinone_linux_arm64
+            /home/runner/work/iptv-allinone/iptv-allinone/artifacts/allinone_darwin_amd64
+            /home/runner/work/iptv-allinone/iptv-allinone/artifacts/allinone_darwin_arm64
+            /home/runner/work/iptv-allinone/iptv-allinone/artifacts/allinone_windows_amd64.exe
