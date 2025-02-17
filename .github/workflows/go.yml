@@ -93,8 +93,8 @@ jobs:
           name: "Release ${{ github.run_id }}"
           tag_name: "release-${{ github.run_id }}"
           files: |
-            ./artifacts/allinone_linux_amd64
-            ./artifacts/allinone_linux_arm64
-            ./artifacts/allinone_darwin_amd64
-            ./artifacts/allinone_darwin_arm64
-            ./artifacts/allinone_windows_amd64.exe
+            ./allinone_linux_amd64
+            ./allinone_linux_arm64
+            ./allinone_darwin_amd64
+            ./allinone_darwin_arm64
+            ./allinone_windows_amd64.exe
