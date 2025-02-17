@@ -1,10 +1,11 @@
 name: IPTV-Go-test
 
 on:
-
-
   workflow_dispatch:
-  
+
+permissions:
+  contents: write  # 添加写入权限用于创建Release
+
 jobs:
   linux_amd64_build:
     runs-on: ubuntu-latest
@@ -12,9 +13,8 @@ jobs:
       - uses: actions/checkout@v4
       - name: Cross Compile
         run: |
-          cd ./
           CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o allinone_linux_amd64
-      - name: Upload Cross Compile Artifacts
+      - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
           name: allinone_linux_amd64
@@ -26,9 +26,8 @@ jobs:
       - uses: actions/checkout@v4
       - name: Cross Compile
         run: |
-          cd ./
           GOOS=linux GOARCH=arm64 go build -o allinone_linux_arm64
-      - name: Upload Cross Compile Artifacts
+      - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
           name: allinone_linux_arm64
@@ -40,9 +39,8 @@ jobs:
       - uses: actions/checkout@v4
       - name: Cross Compile
         run: |
-          cd ./
           GOOS=darwin GOARCH=amd64 go build -o allinone_darwin_amd64
-      - name: Upload Cross Compile Artifacts
+      - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
           name: allinone_darwin_amd64
@@ -54,9 +52,8 @@ jobs:
       - uses: actions/checkout@v4
       - name: Cross Compile
         run: |
-          cd ./
           GOOS=darwin GOARCH=arm64 go build -o allinone_darwin_arm64
-      - name: Upload Cross Compile Artifacts
+      - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
           name: allinone_darwin_arm64
@@ -68,12 +65,36 @@ jobs:
       - uses: actions/checkout@v4
       - name: Cross Compile
         run: |
-          cd ./
-        
           GOOS=windows GOARCH=amd64 go build -o allinone_windows_amd64.exe
-          echo "tag=$(git log --date=format:'%Y%m%d-%H%M' --pretty=format:%cd ${{ env.commitS }} -1)" >> $GITHUB_ENV    
-      - name: Upload Cross Compile Artifacts
+      - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
           name: allinone_windows_amd64.exe
           path: ./allinone_windows_amd64.exe
+
+  create_release:
+    needs: [  # 依赖所有构建任务
+      linux_amd64_build,
+      linux_arm64_build,
+      darwin_amd64_build,
+      darwin_arm64_build,
+      windows_amd64_build
+    ]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: ./artifacts
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          name: "Release ${{ github.run_id }}"
+          tag_name: "release-${{ github.run_id }}"
+          files: |
+            ./artifacts/allinone_linux_amd64
+            ./artifacts/allinone_linux_arm64
+            ./artifacts/allinone_darwin_amd64
+            ./artifacts/allinone_darwin_arm64
+            ./artifacts/allinone_windows_amd64.exe
