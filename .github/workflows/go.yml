@@ -1,121 +1,88 @@
-name: IPTV-Go-MultiBuild
+name: IPTV-Go-test
 
 on:
   workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: write  # 添加写入权限用于创建Release
 
 jobs:
-  # Linux 系列
-  linux_amd64:
+  linux_amd64_build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Build Linux AMD64
-        run: CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o allinone_linux_amd64
+      - name: Cross Compile
+        run: |
+          CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o allinone_linux_amd64
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: allinone_linux_amd64
+          path: ./allinone_linux_amd64
 
-  linux_arm64:
+  linux_arm64_build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Build Linux ARM64
-        run: CGO_ENABLED=0 GOOS=linux GOARCH=arm64 go build -o allinone_linux_arm64
+      - name: Cross Compile
+        run: |
+          GOOS=linux GOARCH=arm64 go build -o allinone_linux_arm64
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: allinone_linux_arm64
+          path: ./allinone_linux_arm64
 
-  linux_386:
+  darwin_amd64_build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Build Linux 386
-        run: CGO_ENABLED=0 GOOS=linux GOARCH=386 go build -o allinone_linux_386
+      - name: Cross Compile
+        run: |
+          GOOS=darwin GOARCH=amd64 go build -o allinone_darwin_amd64
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: allinone_darwin_amd64
+          path: ./allinone_darwin_amd64
 
-  # macOS 系列
-  darwin_amd64:
+  darwin_arm64_build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Build macOS AMD64
-        run: GOOS=darwin GOARCH=amd64 go build -o allinone_darwin_amd64
-
-  darwin_arm64:
+      - name: Cross Compile
+        run: |
+          GOOS=darwin GOARCH=arm64 go build -o allinone_darwin_arm64
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: allinone_darwin_arm64
+          path: ./allinone_darwin_arm64
+  
+  windows_amd64_build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Build macOS ARM64
-        run: GOOS=darwin GOARCH=arm64 go build -o allinone_darwin_arm64
+      - name: Cross Compile
+        run: |
+          GOOS=windows GOARCH=amd64 go build -o allinone_windows_amd64.exe
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: allinone_windows_amd64.exe
+          path: ./allinone_windows_amd64.exe
 
-  # Windows 系列
-  windows_amd64:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Build Windows AMD64
-        run: GOOS=windows GOARCH=amd64 go build -o allinone_windows_amd64.exe
-
-  windows_386:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Build Windows 386
-        run: GOOS=windows GOARCH=386 go build -o allinone_windows_386.exe
-
-  # BSD 系列
-  freebsd_amd64:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Build FreeBSD AMD64
-        run: GOOS=freebsd GOARCH=amd64 go build -o allinone_freebsd_amd64
-
-  freebsd_arm64:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Build FreeBSD ARM64
-        run: GOOS=freebsd GOARCH=arm64 go build -o allinone_freebsd_arm64
-
-  netbsd_amd64:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Build NetBSD AMD64
-        run: GOOS=netbsd GOARCH=amd64 go build -o allinone_netbsd_amd64
-
-  openbsd_amd64:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Build OpenBSD AMD64
-        run: GOOS=openbsd GOARCH=amd64 go build -o allinone_openbsd_amd64
-
-  # 其他系统
-  solaris_amd64:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Build Solaris AMD64
-        run: GOOS=solaris GOARCH=amd64 go build -o allinone_solaris_amd64
-
-  plan9_amd64:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Build Plan9 AMD64
-        run: GOOS=plan9 GOARCH=amd64 go build -o allinone_plan9_amd64
-
-  # Release 创建任务
   create_release:
-    needs: [
-      linux_amd64, linux_arm64, linux_386,
-      darwin_amd64, darwin_arm64,
-      windows_amd64, windows_386,
-      freebsd_amd64, freebsd_arm64,
-      netbsd_amd64, openbsd_amd64,
-      solaris_amd64, plan9_amd64
+    needs: [  # 依赖所有构建任务
+      linux_amd64_build,
+      linux_arm64_build,
+      darwin_amd64_build,
+      darwin_arm64_build,
+      windows_amd64_build
     ]
     runs-on: ubuntu-latest
     steps:
-      - name: Download Artifacts
+      - name: Download all artifacts
         uses: actions/download-artifact@v4
         with:
           path: ./artifacts
@@ -123,13 +90,11 @@ jobs:
       - name: Create Release
         uses: softprops/action-gh-release@v1
         with:
+          name: "Release ${{ github.run_id }}"
           tag_name: "release-${{ github.run_id }}"
           files: |
-            ./artifacts/allinone_linux_*
-            ./artifacts/allinone_darwin_*
-            ./artifacts/allinone_windows_*
-            ./artifacts/allinone_freebsd_*
-            ./artifacts/allinone_netbsd_*
-            ./artifacts/allinone_openbsd_*
-            ./artifacts/allinone_solaris_*
-            ./artifacts/allinone_plan9_*
+            /home/runner/work/iptv-allinone/iptv-allinone/artifacts/allinone_linux_amd64
+            /home/runner/work/iptv-allinone/iptv-allinone/artifacts/allinone_linux_arm64
+            /home/runner/work/iptv-allinone/iptv-allinone/artifacts/allinone_darwin_amd64
+            /home/runner/work/iptv-allinone/iptv-allinone/artifacts/allinone_darwin_arm64
+            /home/runner/work/iptv-allinone/iptv-allinone/artifacts/allinone_windows_amd64.exe
